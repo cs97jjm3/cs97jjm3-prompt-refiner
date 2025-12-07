@@ -1,0 +1,128 @@
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+const path = require('path');
+const os = require('os');
+
+let db = null;
+
+async function initDatabase() {
+  if (db) return db;
+
+  // Store database in user's home directory for persistence
+  const dataDir = path.join(os.homedir(), '.prompt-refiner');
+  const fs = require('fs');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  
+  const dbPath = path.join(dataDir, 'prompt_refiner.db');
+
+  db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database
+  });
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS prompts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      original_text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS variants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prompt_id INTEGER NOT NULL,
+      style TEXT NOT NULL,
+      refined_text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (prompt_id) REFERENCES prompts(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS decisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prompt_id INTEGER NOT NULL,
+      variant_id INTEGER NOT NULL,
+      accepted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (prompt_id) REFERENCES prompts(id),
+      FOREIGN KEY (variant_id) REFERENCES variants(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_variants_prompt ON variants(prompt_id);
+    CREATE INDEX IF NOT EXISTS idx_decisions_prompt ON decisions(prompt_id);
+  `);
+
+  return db;
+}
+
+async function savePrompt(originalText) {
+  const database = await initDatabase();
+  const result = await database.run(
+    'INSERT INTO prompts (original_text) VALUES (?)',
+    [originalText]
+  );
+  return result.lastID;
+}
+
+async function saveVariant(promptId, style, refinedText) {
+  const database = await initDatabase();
+  const result = await database.run(
+    'INSERT INTO variants (prompt_id, style, refined_text) VALUES (?, ?, ?)',
+    [promptId, style, refinedText]
+  );
+  return result.lastID;
+}
+
+async function getPrompt(promptId) {
+  const database = await initDatabase();
+  return database.get('SELECT * FROM prompts WHERE id = ?', [promptId]);
+}
+
+async function getVariant(variantId) {
+  const database = await initDatabase();
+  return database.get('SELECT * FROM variants WHERE id = ?', [variantId]);
+}
+
+async function getVariantsForPrompt(promptId) {
+  const database = await initDatabase();
+  return database.all(
+    'SELECT * FROM variants WHERE prompt_id = ? ORDER BY style',
+    [promptId]
+  );
+}
+
+async function recordDecision(promptId, variantId) {
+  const database = await initDatabase();
+  const result = await database.run(
+    'INSERT INTO decisions (prompt_id, variant_id) VALUES (?, ?)',
+    [promptId, variantId]
+  );
+  return result.lastID;
+}
+
+async function getDecisionHistory(limit = 50) {
+  const database = await initDatabase();
+  return database.all(`
+    SELECT 
+      d.id,
+      d.accepted_at,
+      p.original_text,
+      v.style,
+      v.refined_text
+    FROM decisions d
+    JOIN prompts p ON d.prompt_id = p.id
+    JOIN variants v ON d.variant_id = v.id
+    ORDER BY d.accepted_at DESC
+    LIMIT ?
+  `, [limit]);
+}
+
+module.exports = {
+  initDatabase,
+  savePrompt,
+  saveVariant,
+  getPrompt,
+  getVariant,
+  getVariantsForPrompt,
+  recordDecision,
+  getDecisionHistory
+};

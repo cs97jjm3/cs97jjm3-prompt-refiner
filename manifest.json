@@ -1,0 +1,43 @@
+{
+  "manifest_version": "0.1",
+  "name": "prompt-refiner",
+  "display_name": "Prompt Refiner",
+  "version": "1.0.0",
+  "description": "Refine prompts with style-specific variants - concise, detailed, creative, or analytical",
+  "author": {
+    "name": "BA Workflow Tools"
+  },
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"]
+    }
+  },
+  "tools": [
+    {
+      "name": "refinePrompt",
+      "description": "Store a prompt and get refinement guidance for different styles"
+    },
+    {
+      "name": "saveVariant",
+      "description": "Save a refined prompt variant to the database"
+    },
+    {
+      "name": "diffPrompt",
+      "description": "Show differences between original and refined prompt"
+    },
+    {
+      "name": "acceptVariant",
+      "description": "Record that the user chose a specific variant"
+    },
+    {
+      "name": "getHistory",
+      "description": "Retrieve history of refined prompts and decisions"
+    }
+  ],
+  "keywords": ["prompt", "refinement", "writing", "productivity"],
+  "license": "MIT"
+}

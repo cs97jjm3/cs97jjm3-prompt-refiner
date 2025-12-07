@@ -1,0 +1,13 @@
+{
+  "name": "prompt-refiner",
+  "version": "1.0.0",
+  "description": "MCP Desktop Extension for refining prompts with style-specific variants",
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "pack": "mcpb pack",
+    "build": "npm run install:server && npm run pack"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "latest"
+  }
+}
