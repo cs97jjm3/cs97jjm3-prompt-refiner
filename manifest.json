@@ -3,13 +3,14 @@
   "name": "prompt-refiner",
   "display_name": "Prompt Refiner",
   "version": "1.1.0",
-  "description": "Refine prompts with style-specific variants - concise, detailed, creative, or analytical. Auto-displays comparison interface when all variants are saved.",
+  "description": "Comprehensive prompt engineering toolkit: refine, analyze, compare, and manage prompts with style variants and templates.",
   "author": {
-    "name": "James Murrell"
+    "name": "James Murrell",
+    "email": "james.murrell@theaccessgroup.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/cs97jjm3/cs97jjm3-prompt-refinerr"
+    "url": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner"
   },
   "homepage": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner#readme",
   "icon": "icon.png",
@@ -24,27 +25,31 @@
   "tools": [
     {
       "name": "refinePrompt",
-      "description": "Store a prompt and get refinement guidance for different styles"
+      "description": "Generate 4 refined variants (concise, detailed, creative, analytical) with instant React UI display"
     },
     {
-      "name": "saveVariant",
-      "description": "Save a refined prompt variant - auto-displays when all 4 styles are saved"
+      "name": "analyzePrompt",
+      "description": "Analyze prompt quality with feedback on clarity, specificity, and improvement opportunities"
     },
     {
-      "name": "displayVariants",
-      "description": "Manually display saved variants in a visual React artifact (usually not needed due to auto-display)"
+      "name": "getPromptTemplates",
+      "description": "Access pre-built prompt templates for common BA tasks (requirements, user stories, documentation, analysis)"
     },
     {
-      "name": "diffPrompt",
-      "description": "Show differences between original and refined prompt with color-coded diff view"
+      "name": "compareVariants",
+      "description": "Side-by-side comparison of variants with highlighted differences and use case recommendations"
     },
     {
-      "name": "acceptVariant",
-      "description": "Record that the user chose a specific variant and display confirmation"
+      "name": "exportPrompts",
+      "description": "Export refined prompts in multiple formats (markdown, JSON, plain text) for documentation"
+    },
+    {
+      "name": "favoriteVariant",
+      "description": "Mark prompts as favorites to build a library of proven, reusable prompts"
     },
     {
       "name": "getHistory",
-      "description": "Retrieve history of refined prompts and decisions as React artifact"
+      "description": "View refinement history with expandable cards, filters, and search"
     }
   ],
   "keywords": [
@@ -59,7 +64,11 @@
     "llm-tools",
     "claude-mcp",
     "text-improvement",
-    "style-variants"
+    "style-variants",
+    "prompt-optimization",
+    "ai-tools",
+    "requirements-engineering",
+    "team-collaboration"
   ],
   "license": "MIT"
 }

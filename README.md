@@ -5,16 +5,16 @@ An MCP Desktop Extension that helps you refine prompts in different styles. Clau
 ## Features
 
 - **Four refinement styles:**
-  - **Concise** – Shorter and more direct
-  - **Detailed** – Expanded with context and specifics
-  - **Creative** – Encourages imaginative responses
-  - **Analytical** – Structured for logical, systematic output
+  - **Concise** — Shorter and more direct
+  - **Detailed** — Expanded with context and specifics
+  - **Creative** — Encourages imaginative responses
+  - **Analytical** — Structured for logical, systematic output
 
-- **Auto-display** – Variants automatically appear when all 4 styles are saved
-- **Interactive React UI** – Visual comparison with copy/select buttons
-- **Diff view** – See exactly what changed between original and refined
-- **History tracking** – All prompts, variants, and decisions stored in SQLite
-- **No API keys** – Claude Desktop handles all the LLM work
+- **Instant display** — Variants automatically appear in an interactive React UI
+- **One-step refinement** — Just ask Claude to refine your prompt
+- **Copy buttons** — Easy copying of your preferred variant
+- **History tracking** — All prompts and variants stored in SQLite
+- **No API keys** — Claude Desktop handles all the LLM work
 
 ## Author
 
@@ -25,13 +25,11 @@ Created by James at The Access Group for Business Analyst workflow optimization.
 ### Prerequisites
 
 Install the MCPB toolchain globally:
-
 ```bash
 npm install -g @anthropic-ai/mcpb
 ```
 
 ### Build Steps
-
 ```bash
 cd C:\Users\james\Documents\prompt-refiner
 
@@ -40,7 +38,7 @@ cd server
 npm install
 cd ..
 
-# Package as .mcpb (only needed for manifest changes)
+# Package as .mcpb
 mcpb pack
 ```
 
@@ -54,38 +52,27 @@ This creates `prompt-refiner.mcpb` in the current directory.
 
 ## Usage
 
-Ask Claude to refine a prompt:
+Simply ask Claude to refine a prompt:
 
 > "Refine this prompt for me: Write a story about a dog"
 
 Claude will:
-1. Call `refinePrompt` to store your prompt and get style guidance
-2. Generate variants in each style using `saveVariant`
-3. **Automatically display** the comparison interface when the 4th variant is saved
-4. You select your preferred variant
-5. Call `acceptVariant` to record your decision
+1. Call `refinePrompt` with your original prompt
+2. Generate 4 variants (concise, detailed, creative, analytical)
+3. Save them to the database
+4. Return a React artifact displaying all variants with copy buttons
+5. You choose your preferred variant by copying it
 
-## Workflow Improvement (v1.1.0)
-
-**Before:** Manual 3-step process
-- `refinePrompt` → `saveVariant` × 4 → `displayVariants` (manual call)
-
-**Now:** Automatic 2-step process  
-- `refinePrompt` → `saveVariant` × 4 (auto-displays on 4th save)
+That's it! One tool call, instant results.
 
 ## Tools
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| `refinePrompt` | Store prompt, get refinement guidance | Always call first |
-| `saveVariant` | Save a generated variant | Auto-displays after 4th variant |
-| `displayVariants` | Manually display variants | Rarely needed due to auto-display |
-| `diffPrompt` | Compare original vs variant | Shows color-coded changes |
-| `acceptVariant` | Record user's choice | Creates confirmation artifact |
-| `getHistory` | View past refinements | React artifact with expandable cards |
+| Tool | Purpose | 
+|------|---------|
+| `refinePrompt` | Generate and display 4 refined variants |
+| `getHistory` | View past refinements with expandable cards |
 
 ## File Structure
-
 ```
 prompt-refiner/
 ├── manifest.json          # MCPB manifest
@@ -96,7 +83,6 @@ prompt-refiner/
 └── server/
     ├── index.js           # MCP server entry point
     ├── db.js              # SQLite database layer
-    ├── llmAdapter.js      # Style guidance and diff logic
     └── package.json       # Server dependencies
 ```
 
@@ -110,6 +96,17 @@ History is stored in `~/.prompt-refiner/prompt_refiner.db`
 - **Manifest changes** require `mcpb pack` and reinstalling the `.mcpb`
 - All UI components use React with Tailwind CSS classes
 - SQLite database auto-initializes on first run
+
+## Example Workflow
+```
+You: "improve prompt: what is a Christmas tree in uk"
+
+Claude: [calls refinePrompt internally]
+        [displays React artifact with 4 variants]
+        
+You: [clicks Copy on your preferred variant]
+     [uses the refined prompt in your next message]
+```
 
 ## License
 
