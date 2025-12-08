@@ -28,7 +28,7 @@ An MCP Desktop Extension that helps you refine prompts in different styles. Clau
 
 ## Author
 
-Created by James at The Access Group for Business Analyst workflow optimization.
+Created by James Murell at home: his day job is at The Access Group for Business Analyst
 
 ---
 
