@@ -1,28 +1,28 @@
 {
-  "manifest_version": "0.1",
+  "manifest_version": "0.2",
   "name": "prompt-refiner",
-  "display_name": "Prompt Refiner",
-  "version": "1.1.0",
-  "description": "Comprehensive prompt engineering toolkit: refine, analyze, compare, and manage prompts with style variants and templates.",
+  "version": "1.0.0",
+  "description": "MCP Desktop Extension for refining prompts with style-specific variants",
+  "long_description": "MCP Desktop Extension for refining prompts with style-specific variants",
   "author": {
     "name": "James Murrell",
-    "email": "murrell.james@gmail.com"
+    "email": "murrell.james@gmail.com",
+    "url": "https://github.com/cs97jjm3"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner"
-  },
-  "homepage": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner#readme",
+  "documentation": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner#readme",
   "icon": "icon.png",
   "server": {
     "type": "node",
     "entry_point": "server/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/server/index.js"]
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {}
     }
   },
-  "tools": [
+"tools": [
     {
       "name": "refinePrompt",
       "description": "Generate 4 refined variants (concise, detailed, creative, analytical) with instant React UI display"
@@ -52,6 +52,7 @@
       "description": "View refinement history with expandable cards, filters, and search"
     }
   ],
+  "tools_generated": true,
   "keywords": [
     "prompt-engineering",
     "prompt-refinement",
@@ -70,5 +71,9 @@
     "requirements-engineering",
     "team-collaboration"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner"
+  }
 }
