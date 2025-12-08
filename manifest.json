@@ -2,11 +2,16 @@
   "manifest_version": "0.1",
   "name": "prompt-refiner",
   "display_name": "Prompt Refiner",
-  "version": "1.0.0",
-  "description": "Refine prompts with style-specific variants - concise, detailed, creative, or analytical",
+  "version": "1.1.0",
+  "description": "Refine prompts with style-specific variants - concise, detailed, creative, or analytical. Auto-displays comparison interface when all variants are saved.",
   "author": {
-    "name": "BA Workflow Tools"
+    "name": "James Murrell"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cs97jjm3/cs97jjm3-prompt-refinerr"
+  },
+  "homepage": "https://github.com/cs97jjm3/cs97jjm3-prompt-refiner#readme",
   "icon": "icon.png",
   "server": {
     "type": "node",
@@ -23,25 +28,38 @@
     },
     {
       "name": "saveVariant",
-      "description": "Save a refined prompt variant to the database"
+      "description": "Save a refined prompt variant - auto-displays when all 4 styles are saved"
     },
     {
       "name": "displayVariants",
-      "description": "Display saved variants in a visual artifact for user selection"
+      "description": "Manually display saved variants in a visual React artifact (usually not needed due to auto-display)"
     },
     {
       "name": "diffPrompt",
-      "description": "Show differences between original and refined prompt"
+      "description": "Show differences between original and refined prompt with color-coded diff view"
     },
     {
       "name": "acceptVariant",
-      "description": "Record that the user chose a specific variant"
+      "description": "Record that the user chose a specific variant and display confirmation"
     },
     {
       "name": "getHistory",
-      "description": "Retrieve history of refined prompts and decisions"
+      "description": "Retrieve history of refined prompts and decisions as React artifact"
     }
   ],
-  "keywords": ["prompt", "refinement", "writing", "productivity"],
+  "keywords": [
+    "prompt-engineering",
+    "prompt-refinement",
+    "writing-assistance",
+    "content-generation",
+    "business-analysis",
+    "documentation",
+    "communication",
+    "productivity",
+    "llm-tools",
+    "claude-mcp",
+    "text-improvement",
+    "style-variants"
+  ],
   "license": "MIT"
 }

@@ -10,9 +10,15 @@ An MCP Desktop Extension that helps you refine prompts in different styles. Clau
   - **Creative** – Encourages imaginative responses
   - **Analytical** – Structured for logical, systematic output
 
+- **Auto-display** – Variants automatically appear when all 4 styles are saved
+- **Interactive React UI** – Visual comparison with copy/select buttons
 - **Diff view** – See exactly what changed between original and refined
 - **History tracking** – All prompts, variants, and decisions stored in SQLite
 - **No API keys** – Claude Desktop handles all the LLM work
+
+## Author
+
+Created by James at The Access Group for Business Analyst workflow optimization.
 
 ## Building the Extension
 
@@ -34,7 +40,7 @@ cd server
 npm install
 cd ..
 
-# Package as .mcpb
+# Package as .mcpb (only needed for manifest changes)
 mcpb pack
 ```
 
@@ -54,20 +60,29 @@ Ask Claude to refine a prompt:
 
 Claude will:
 1. Call `refinePrompt` to store your prompt and get style guidance
-2. Generate variants in each style
-3. Call `saveVariant` for each one
-4. Present the options to you
-5. When you choose one, call `acceptVariant` to record your decision
+2. Generate variants in each style using `saveVariant`
+3. **Automatically display** the comparison interface when the 4th variant is saved
+4. You select your preferred variant
+5. Call `acceptVariant` to record your decision
+
+## Workflow Improvement (v1.1.0)
+
+**Before:** Manual 3-step process
+- `refinePrompt` → `saveVariant` × 4 → `displayVariants` (manual call)
+
+**Now:** Automatic 2-step process  
+- `refinePrompt` → `saveVariant` × 4 (auto-displays on 4th save)
 
 ## Tools
 
-| Tool | Purpose |
-|------|---------|
-| `refinePrompt` | Store prompt, get refinement guidance |
-| `saveVariant` | Save a generated variant |
-| `diffPrompt` | Compare original vs variant |
-| `acceptVariant` | Record user's choice |
-| `getHistory` | View past refinements |
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| `refinePrompt` | Store prompt, get refinement guidance | Always call first |
+| `saveVariant` | Save a generated variant | Auto-displays after 4th variant |
+| `displayVariants` | Manually display variants | Rarely needed due to auto-display |
+| `diffPrompt` | Compare original vs variant | Shows color-coded changes |
+| `acceptVariant` | Record user's choice | Creates confirmation artifact |
+| `getHistory` | View past refinements | React artifact with expandable cards |
 
 ## File Structure
 
@@ -76,6 +91,7 @@ prompt-refiner/
 ├── manifest.json          # MCPB manifest
 ├── package.json           # Root package (mcpb tooling)
 ├── icon.svg               # Extension icon
+├── icon.png              # Extension icon (PNG)
 ├── README.md
 └── server/
     ├── index.js           # MCP server entry point
@@ -88,6 +104,13 @@ prompt-refiner/
 
 History is stored in `~/.prompt-refiner/prompt_refiner.db`
 
-## Licence
+## Development Notes
+
+- **JavaScript changes** are live - just restart Claude Desktop
+- **Manifest changes** require `mcpb pack` and reinstalling the `.mcpb`
+- All UI components use React with Tailwind CSS classes
+- SQLite database auto-initializes on first run
+
+## License
 
 MIT

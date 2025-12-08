@@ -38,17 +38,7 @@ async function initDatabase() {
       FOREIGN KEY (prompt_id) REFERENCES prompts(id)
     );
 
-    CREATE TABLE IF NOT EXISTS decisions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      prompt_id INTEGER NOT NULL,
-      variant_id INTEGER NOT NULL,
-      accepted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (prompt_id) REFERENCES prompts(id),
-      FOREIGN KEY (variant_id) REFERENCES variants(id)
-    );
-
     CREATE INDEX IF NOT EXISTS idx_variants_prompt ON variants(prompt_id);
-    CREATE INDEX IF NOT EXISTS idx_decisions_prompt ON decisions(prompt_id);
   `);
 
   return db;
@@ -90,30 +80,34 @@ async function getVariantsForPrompt(promptId) {
   );
 }
 
-async function recordDecision(promptId, variantId) {
+async function getHistory(limit = 50) {
   const database = await initDatabase();
-  const result = await database.run(
-    'INSERT INTO decisions (prompt_id, variant_id) VALUES (?, ?)',
-    [promptId, variantId]
-  );
-  return result.lastID;
-}
-
-async function getDecisionHistory(limit = 50) {
-  const database = await initDatabase();
-  return database.all(`
+  const prompts = await database.all(`
     SELECT 
-      d.id,
-      d.accepted_at,
+      p.id,
       p.original_text,
-      v.style,
-      v.refined_text
-    FROM decisions d
-    JOIN prompts p ON d.prompt_id = p.id
-    JOIN variants v ON d.variant_id = v.id
-    ORDER BY d.accepted_at DESC
+      p.created_at
+    FROM prompts p
+    ORDER BY p.created_at DESC
     LIMIT ?
   `, [limit]);
+
+  // Get all variants for each prompt
+  for (const prompt of prompts) {
+    const variants = await database.all(`
+      SELECT style, refined_text
+      FROM variants
+      WHERE prompt_id = ?
+      ORDER BY style
+    `, [prompt.id]);
+    
+    prompt.variants = JSON.stringify(variants.map(v => ({
+      style: v.style,
+      text: v.refined_text
+    })));
+  }
+
+  return prompts;
 }
 
 module.exports = {
@@ -123,6 +117,5 @@ module.exports = {
   getPrompt,
   getVariant,
   getVariantsForPrompt,
-  recordDecision,
-  getDecisionHistory
+  getHistory
 };

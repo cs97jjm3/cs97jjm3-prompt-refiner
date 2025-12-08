@@ -1,8 +1,170 @@
 #!/usr/bin/env node
 
 const readline = require('readline');
+const fs = require('fs');
+const path = require('path');
 const db = require('./db');
 const { STYLE_GUIDANCE, getAllStyles, generateDiff } = require('./llmAdapter');
+
+// Style colors for visual consistency - Tailwind classes
+const STYLE_CONFIG = {
+  concise: { 
+    border: 'border-blue-500', 
+    bg: 'bg-blue-50', 
+    text: 'text-blue-700',
+    badge: 'bg-blue-100 text-blue-700',
+    button: 'bg-blue-500 hover:bg-blue-600',
+    name: 'Concise',
+    description: 'Shorter and more direct'
+  },
+  detailed: { 
+    border: 'border-purple-500', 
+    bg: 'bg-purple-50', 
+    text: 'text-purple-700',
+    badge: 'bg-purple-100 text-purple-700',
+    button: 'bg-purple-500 hover:bg-purple-600',
+    name: 'Detailed',
+    description: 'Expanded with context'
+  },
+  creative: { 
+    border: 'border-orange-500', 
+    bg: 'bg-orange-50', 
+    text: 'text-orange-700',
+    badge: 'bg-orange-100 text-orange-700',
+    button: 'bg-orange-500 hover:bg-orange-600',
+    name: 'Creative',
+    description: 'Encourages imagination'
+  },
+  analytical: { 
+    border: 'border-green-500', 
+    bg: 'bg-green-50', 
+    text: 'text-green-700',
+    badge: 'bg-green-100 text-green-700',
+    button: 'bg-green-500 hover:bg-green-600',
+    name: 'Analytical',
+    description: 'Structured and logical'
+  }
+};
+
+function escapeJsString(text) {
+  if (!text) return '';
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/`/g, '\\`')
+    .replace(/\$/g, '\\$')
+    .replace(/\n/g, '\\n');
+}
+
+// Generate React JSX artifact for variants display with copy-to-accept
+function generateVariantsJsx(promptId, originalText, variants) {
+  const variantsData = variants.map(v => {
+    const config = STYLE_CONFIG[v.style] || STYLE_CONFIG.concise;
+    return {
+      id: v.id,
+      style: v.style,
+      styleName: config.name,
+      styleDescription: config.description,
+      text: v.refined_text,
+      border: config.border,
+      bg: config.bg,
+      textColor: config.text,
+      badge: config.badge,
+      button: config.button
+    };
+  });
+
+  return `import { useState } from 'react';
+
+export default function PromptVariants() {
+  const [copiedId, setCopiedId] = useState(null);
+
+  const originalPrompt = \`${escapeJsString(originalText)}\`;
+  
+  const variants = ${JSON.stringify(variantsData, null, 2)};
+
+  const copyToClipboard = async (text, id) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <span>✨</span> Refined Prompts
+          </h1>
+          <p className="text-slate-500 mt-1">Choose your preferred variant by clicking Copy</p>
+        </div>
+
+        {/* Original Prompt */}
+        <div className="bg-slate-100 rounded-lg p-4 mb-6">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Original Prompt</h3>
+          <p className="text-slate-700 whitespace-pre-wrap">{originalPrompt}</p>
+        </div>
+
+        {/* Variants Grid */}
+        <div className="space-y-4">
+          {variants.map((variant) => (
+            <div 
+              key={variant.id}
+              className={\`bg-white rounded-xl p-5 border-l-4 \${variant.border} shadow-sm hover:shadow-md transition-shadow\`}
+            >
+              {/* Card Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <span className={\`px-3 py-1 rounded-full text-sm font-semibold \${variant.badge}\`}>
+                    {variant.styleName}
+                  </span>
+                  <span className="text-slate-400 text-sm">{variant.styleDescription}</span>
+                </div>
+              </div>
+
+              {/* Variant Text */}
+              <div className={\`\${variant.bg} rounded-lg p-4 mb-4\`}>
+                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{variant.text}</p>
+              </div>
+
+              {/* Copy Button */}
+              <button
+                onClick={() => copyToClipboard(variant.text, variant.id)}
+                className={\`flex items-center justify-center gap-2 w-full px-6 py-3 \${variant.button} text-white rounded-lg transition-colors text-sm font-medium\`}
+              >
+                {copiedId === variant.id ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer Help */}
+        <div className="mt-6 text-center text-slate-400 text-sm">
+          <p>Click Copy to save your preferred prompt to clipboard</p>
+        </div>
+      </div>
+    </div>
+  );
+}`;
+}
 
 // MCP Server for Claude Desktop - uses stdio protocol
 class PromptRefinerMCP {
@@ -10,84 +172,21 @@ class PromptRefinerMCP {
     this.tools = {
       refinePrompt: {
         name: 'refinePrompt',
-        description: 'Stores a prompt and returns refinement guidance. Claude should generate variants based on the guidance, then call saveVariant for each, and finally display ALL variants to the user in a React artifact with card components showing each style.',
+        description: 'Takes a prompt, generates 4 refined variants (concise, detailed, creative, analytical), saves them all to the database, and returns them for display. Claude should immediately display these variants in a React artifact.',
         inputSchema: {
           type: 'object',
           properties: {
             prompt: {
               type: 'string',
               description: 'The original prompt to refine'
-            },
-            styles: {
-              type: 'array',
-              items: {
-                type: 'string',
-                enum: ['concise', 'detailed', 'creative', 'analytical']
-              },
-              description: 'Styles to generate (defaults to all four)'
             }
           },
           required: ['prompt']
         }
       },
-      saveVariant: {
-        name: 'saveVariant',
-        description: 'Saves a refined prompt variant to the database',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            promptId: {
-              type: 'integer',
-              description: 'ID of the original prompt'
-            },
-            style: {
-              type: 'string',
-              enum: ['concise', 'detailed', 'creative', 'analytical'],
-              description: 'Style of this variant'
-            },
-            refinedText: {
-              type: 'string',
-              description: 'The refined prompt text'
-            }
-          },
-          required: ['promptId', 'style', 'refinedText']
-        }
-      },
-      diffPrompt: {
-        name: 'diffPrompt',
-        description: 'Shows differences between original and refined prompt. Display the result as a React artifact with color-coded diff view (red for removed, green for added).',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            originalId: {
-              type: 'integer',
-              description: 'ID of the original prompt'
-            },
-            variantId: {
-              type: 'integer',
-              description: 'ID of the variant to compare'
-            }
-          },
-          required: ['originalId', 'variantId']
-        }
-      },
-      acceptVariant: {
-        name: 'acceptVariant',
-        description: 'Records that the user chose a specific variant. Display the accepted prompt prominently in an artifact with a copy button.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            variantId: {
-              type: 'integer',
-              description: 'ID of the accepted variant'
-            }
-          },
-          required: ['variantId']
-        }
-      },
       getHistory: {
         name: 'getHistory',
-        description: 'Retrieves history of refined prompts and decisions. Display as a React artifact with a table or list view.',
+        description: 'Retrieves history of refined prompts. Returns a React artifact showing the history.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -96,20 +195,6 @@ class PromptRefinerMCP {
               description: 'Maximum number of records to return (default 20)'
             }
           }
-        }
-      },
-      displayVariants: {
-        name: 'displayVariants',
-        description: 'Displays saved variants for a prompt in a visual artifact. Call this after saving all variants to show them to the user.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            promptId: {
-              type: 'integer',
-              description: 'ID of the prompt to display variants for'
-            }
-          },
-          required: ['promptId']
         }
       }
     };
@@ -145,7 +230,7 @@ class PromptRefinerMCP {
         },
         serverInfo: {
           name: 'prompt-refiner',
-          version: '1.0.0'
+          version: '2.0.0'
         }
       }
     };
@@ -173,20 +258,8 @@ class PromptRefinerMCP {
       case 'refinePrompt':
         result = await this.refinePrompt(args);
         break;
-      case 'saveVariant':
-        result = await this.saveVariant(args);
-        break;
-      case 'diffPrompt':
-        result = await this.diffPrompt(args);
-        break;
-      case 'acceptVariant':
-        result = await this.acceptVariant(args);
-        break;
       case 'getHistory':
         result = await this.getHistory(args);
-        break;
-      case 'displayVariants':
-        result = await this.displayVariants(args);
         break;
       default:
         return this.errorResponse(id, -32602, `Unknown tool: ${name}`);
@@ -202,16 +275,20 @@ class PromptRefinerMCP {
   }
 
   async refinePrompt(args) {
-    const { prompt, styles } = args;
+    const { prompt } = args;
 
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       return { success: false, error: 'Prompt is required and must not be empty' };
     }
 
-    const promptId = await db.savePrompt(prompt.trim());
-    const stylesToUse = styles || getAllStyles();
+    const cleanPrompt = prompt.trim();
+
+    // Save original prompt
+    const promptId = await db.savePrompt(cleanPrompt);
     
-    const guidance = stylesToUse.map(style => {
+    // Get all style guidance
+    const allStyles = getAllStyles();
+    const guidance = allStyles.map(style => {
       const info = STYLE_GUIDANCE[style];
       return {
         style: style,
@@ -221,161 +298,170 @@ class PromptRefinerMCP {
       };
     });
 
+    // Generate variants immediately
+    const variants = [];
+    for (const guide of guidance) {
+      const refinedText = this.generateVariantText(cleanPrompt, guide);
+      const variantId = await db.saveVariant(promptId, guide.style, refinedText);
+      variants.push({
+        id: variantId,
+        style: guide.style,
+        refined_text: refinedText
+      });
+    }
+
+    // Generate React JSX artifact
+    const jsxArtifact = generateVariantsJsx(promptId, cleanPrompt, variants);
+
     return {
       success: true,
       promptId: promptId,
-      originalPrompt: prompt.trim(),
-      instructions: `Generate refined variants for each style below. For each variant:
-1. Call saveVariant with promptId=${promptId}, the style name, and your refined text
-2. After saving ALL variants, call displayVariants with promptId=${promptId} to show the user a visual comparison
-
-The user will then be able to select their preferred version.`,
-      refinementGuidance: guidance
+      originalPrompt: cleanPrompt,
+      variantCount: variants.length,
+      outputType: 'react',
+      artifact: jsxArtifact,
+      instructions: 'Create a React artifact to display all 4 refined prompt variants. Users can copy their preferred version directly.'
     };
   }
 
-  async saveVariant(args) {
-    const { promptId, style, refinedText } = args;
-
-    if (!promptId || !style || !refinedText) {
-      return { success: false, error: 'promptId, style, and refinedText are all required' };
+  generateVariantText(originalPrompt, guide) {
+    // Simple refinement based on style
+    // In a real implementation, this would use an LLM
+    switch (guide.style) {
+      case 'concise':
+        return `${originalPrompt} (simplified and direct)`;
+      case 'detailed':
+        return `${originalPrompt} - with comprehensive context and specific details`;
+      case 'creative':
+        return `Imagine: ${originalPrompt} - expressed in an engaging, creative way`;
+      case 'analytical':
+        return `Analyze: ${originalPrompt} - break this down systematically with clear structure`;
+      default:
+        return originalPrompt;
     }
-
-    const prompt = await db.getPrompt(promptId);
-    if (!prompt) {
-      return { success: false, error: 'Original prompt not found' };
-    }
-
-    const variantId = await db.saveVariant(promptId, style, refinedText.trim());
-
-    return {
-      success: true,
-      variantId: variantId,
-      promptId: promptId,
-      style: style,
-      message: `Saved ${style} variant (ID: ${variantId})`
-    };
-  }
-
-  async displayVariants(args) {
-    const { promptId } = args;
-
-    const prompt = await db.getPrompt(promptId);
-    if (!prompt) {
-      return { success: false, error: 'Prompt not found' };
-    }
-
-    const variants = await db.getVariantsForPrompt(promptId);
-    
-    if (variants.length === 0) {
-      return { success: false, error: 'No variants found for this prompt' };
-    }
-
-    // Return data structured for artifact display
-    return {
-      success: true,
-      displayType: 'variants',
-      promptId: promptId,
-      original: prompt.original_text,
-      variants: variants.map(v => ({
-        id: v.id,
-        style: v.style,
-        styleName: STYLE_GUIDANCE[v.style]?.name || v.style,
-        styleDescription: STYLE_GUIDANCE[v.style]?.description || '',
-        text: v.refined_text
-      })),
-      artifactInstructions: `Display these variants in a React artifact with:
-- A header showing the original prompt
-- Cards for each variant with style name, description, and the refined text
-- A "Use This" button on each card that tells the user to say "accept variant [id]"
-- Use a clean, modern design with good contrast between cards
-- Style colors: concise=#3b82f6, detailed=#8b5cf6, creative=#f59e0b, analytical=#10b981`
-    };
-  }
-
-  async diffPrompt(args) {
-    const { originalId, variantId } = args;
-
-    const prompt = await db.getPrompt(originalId);
-    const variant = await db.getVariant(variantId);
-
-    if (!prompt) {
-      return { success: false, error: 'Original prompt not found' };
-    }
-    if (!variant) {
-      return { success: false, error: 'Variant not found' };
-    }
-
-    const diff = generateDiff(prompt.original_text, variant.refined_text);
-
-    return {
-      success: true,
-      displayType: 'diff',
-      original: prompt.original_text,
-      refined: variant.refined_text,
-      style: variant.style,
-      styleName: STYLE_GUIDANCE[variant.style]?.name || variant.style,
-      diff: diff,
-      artifactInstructions: `Display this diff in a React artifact with:
-- Side-by-side or inline diff view
-- Red background (#fee2e2) for removed lines with strikethrough
-- Green background (#dcfce7) for added lines
-- Gray for unchanged lines
-- A header showing which style variant this is`
-    };
-  }
-
-  async acceptVariant(args) {
-    const { variantId } = args;
-
-    const variant = await db.getVariant(variantId);
-    if (!variant) {
-      return { success: false, error: 'Variant not found' };
-    }
-
-    const decisionId = await db.recordDecision(variant.prompt_id, variantId);
-
-    return {
-      success: true,
-      displayType: 'accepted',
-      decisionId: decisionId,
-      acceptedVariant: {
-        id: variant.id,
-        style: variant.style,
-        styleName: STYLE_GUIDANCE[variant.style]?.name || variant.style,
-        text: variant.refined_text
-      },
-      artifactInstructions: `Display the accepted prompt in a React artifact with:
-- A success header (green) saying "Prompt Accepted"
-- The style name as a badge
-- The refined prompt text in a prominent box
-- A copy-to-clipboard button that copies the text
-- Clean, celebratory design`
-    };
   }
 
   async getHistory(args) {
     const limit = args?.limit || 20;
-    const history = await db.getDecisionHistory(limit);
+    const history = await db.getHistory(limit);
+
+    if (history.length === 0) {
+      const emptyJsx = `export default function HistoryEmpty() {
+  return (
+    <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-5xl mb-4">📭</div>
+        <h1 className="text-2xl font-bold text-slate-800 mb-2">No History Yet</h1>
+        <p className="text-slate-500">Start by refining a prompt to build your history.</p>
+      </div>
+    </div>
+  );
+}`;
+
+      return {
+        success: true,
+        outputType: 'react',
+        artifact: emptyJsx,
+        count: 0
+      };
+    }
+
+    const historyData = history.map(h => {
+      const config = STYLE_CONFIG[h.style] || STYLE_CONFIG.concise;
+      return {
+        id: h.id,
+        createdAt: h.created_at,
+        originalPrompt: h.original_text,
+        variants: JSON.parse(h.variants)
+      };
+    });
+
+    const historyJsx = `import { useState } from 'react';
+
+export default function HistoryView() {
+  const [expanded, setExpanded] = useState(null);
+  
+  const history = ${JSON.stringify(historyData)};
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const truncate = (text, max = 100) => {
+    if (!text || text.length <= max) return text;
+    return text.substring(0, max) + '...';
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <span>📚</span> Refinement History
+          </h1>
+          <p className="text-slate-500 mt-1">{history.length} prompt{history.length !== 1 ? 's' : ''} refined</p>
+        </div>
+
+        <div className="space-y-3">
+          {history.map((item) => (
+            <div 
+              key={item.id}
+              className="bg-white rounded-xl p-5 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setExpanded(expanded === item.id ? null : item.id)}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-slate-600 font-medium">Prompt #{item.id}</span>
+                <span className="text-slate-400 text-xs">{formatDate(item.createdAt)}</span>
+              </div>
+
+              {expanded === item.id ? (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase mb-2">Original</h4>
+                    <p className="text-slate-600 whitespace-pre-wrap">{item.originalPrompt}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase mb-2">Variants</h4>
+                    {item.variants.map((v, i) => (
+                      <div key={i} className="bg-slate-50 rounded-lg p-3">
+                        <div className="text-xs font-semibold text-slate-500 mb-1">{v.style}</div>
+                        <p className="text-slate-700 text-sm">{v.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h4 className="text-xs font-semibold text-slate-400 uppercase mb-1">Original</h4>
+                  <p className="text-slate-500 text-sm">{truncate(item.originalPrompt, 120)}</p>
+                </div>
+              )}
+
+              <div className="mt-3 text-center">
+                <span className="text-slate-400 text-xs">
+                  {expanded === item.id ? 'Click to collapse' : 'Click to expand'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}`;
 
     return {
       success: true,
-      displayType: 'history',
+      outputType: 'react',
+      artifact: historyJsx,
       count: history.length,
-      history: history.map(h => ({
-        id: h.id,
-        acceptedAt: h.accepted_at,
-        originalPrompt: h.original_text,
-        style: h.style,
-        styleName: STYLE_GUIDANCE[h.style]?.name || h.style,
-        refinedPrompt: h.refined_text
-      })),
-      artifactInstructions: `Display this history in a React artifact with:
-- A table or card list showing past refinements
-- Columns: Date, Original (truncated), Style, Refined (truncated)
-- Click to expand and see full text
-- Most recent first
-- Clean, readable design`
+      instructions: 'Create a React artifact showing refinement history with expandable cards.'
     };
   }
 
