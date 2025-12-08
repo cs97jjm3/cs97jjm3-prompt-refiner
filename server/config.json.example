@@ -1,0 +1,15 @@
+{
+  "database_path": "~/.prompt-refiner/prompt_refiner.db",
+  "description": "Configuration for Prompt Refiner MCP Server",
+  "options": {
+    "default_home": "~/.prompt-refiner/prompt_refiner.db (Recommended)",
+    "custom_path": "Specify any writable path, e.g., C:\\MyData\\prompts.db",
+    "temp_directory": "Use system temp (may be cleaned up periodically)",
+    "in_memory": ":memory: (No persistence - data lost on restart)"
+  },
+  "examples": {
+    "windows_custom": "C:\\Users\\YourName\\Documents\\prompt-refiner\\data\\prompts.db",
+    "network_drive": "Z:\\shared\\prompt-refiner\\prompts.db",
+    "portable": "./data/prompts.db (relative to server directory)"
+  }
+}

@@ -1,21 +1,26 @@
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
-const os = require('os');
+const fs = require('fs');
+const { getDatabasePath } = require('./config');
 
 let db = null;
+let dbInfo = null;
 
 async function initDatabase() {
   if (db) return db;
 
-  // Store database in user's home directory for persistence
-  const dataDir = path.join(os.homedir(), '.prompt-refiner');
-  const fs = require('fs');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  // Get database path with fallback handling
+  dbInfo = getDatabasePath();
+  const dbPath = dbInfo.path;
+
+  // If not in-memory, ensure directory exists
+  if (dbPath !== ':memory:') {
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
   }
-  
-  const dbPath = path.join(dataDir, 'prompt_refiner.db');
 
   db = await open({
     filename: dbPath,
@@ -42,6 +47,13 @@ async function initDatabase() {
   `);
 
   return db;
+}
+
+async function getDatabaseInfo() {
+  if (!dbInfo) {
+    await initDatabase();
+  }
+  return dbInfo;
 }
 
 async function savePrompt(originalText) {
@@ -112,6 +124,7 @@ async function getHistory(limit = 50) {
 
 module.exports = {
   initDatabase,
+  getDatabaseInfo,
   savePrompt,
   saveVariant,
   getPrompt,
