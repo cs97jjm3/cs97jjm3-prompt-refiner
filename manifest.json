@@ -26,6 +26,10 @@
       "description": "Save a refined prompt variant to the database"
     },
     {
+      "name": "displayVariants",
+      "description": "Display saved variants in a visual artifact for user selection"
+    },
+    {
       "name": "diffPrompt",
       "description": "Show differences between original and refined prompt"
     },
