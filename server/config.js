@@ -30,8 +30,8 @@ function loadConfig() {
     } else {
       // Create default config file on first run
       fs.writeFileSync(CONFIG_FILE, JSON.stringify(DEFAULT_CONFIG, null, 2));
-      console.log(`Created default config at: ${CONFIG_FILE}`);
-      console.log('Edit this file to change database location.\n');
+      console.error(`Created default config at: ${CONFIG_FILE}`);
+      console.error('Edit this file to change database location.\n');
       return DEFAULT_CONFIG;
     }
   } catch (error) {
@@ -50,10 +50,10 @@ function getDatabasePath() {
   
   // If in-memory is explicitly set
   if (dbPath === ':memory:') {
-    console.log('\n' + '='.repeat(60));
-    console.log('NOTICE: Using in-memory database');
-    console.log('Your prompt history will NOT be saved between sessions');
-    console.log('='.repeat(60) + '\n');
+    console.error('\n' + '='.repeat(60));
+    console.error('NOTICE: Using in-memory database');
+    console.error('Your prompt history will NOT be saved between sessions');
+    console.error('='.repeat(60) + '\n');
     return { path: ':memory:', location: 'memory' };
   }
   
@@ -71,12 +71,12 @@ function getDatabasePath() {
     fs.writeFileSync(testPath, 'test');
     fs.unlinkSync(testPath);
     
-    console.log(`✓ Using database: ${dbPath}\n`);
+    console.error(`✓ Using database: ${dbPath}\n`);
     return { path: dbPath, location: 'configured' };
     
   } catch (error) {
-    console.log(`⚠ Warning: Cannot use configured path (${error.message})`);
-    console.log('Trying fallback locations...\n');
+    console.error(`⚠ Warning: Cannot use configured path (${error.message})`);
+    console.error('Trying fallback locations...\n');
   }
   
   // Fallback 1: Temp directory
@@ -93,20 +93,20 @@ function getDatabasePath() {
     fs.writeFileSync(testPath, 'test');
     fs.unlinkSync(testPath);
     
-    console.log(`✓ Using temp directory: ${tempDbPath}`);
-    console.log('⚠ Note: This location may be cleaned up by the system\n');
+    console.error(`✓ Using temp directory: ${tempDbPath}`);
+    console.error('⚠ Note: This location may be cleaned up by the system\n');
     return { path: tempDbPath, location: 'temp' };
     
   } catch (error) {
-    console.log(`⚠ Warning: Cannot use temp directory (${error.message})`);
-    console.log('Falling back to in-memory database...\n');
+    console.error(`⚠ Warning: Cannot use temp directory (${error.message})`);
+    console.error('Falling back to in-memory database...\n');
   }
   
   // Fallback 2: In-memory (last resort)
-  console.log('\n' + '='.repeat(60));
-  console.log('WARNING: Using in-memory database (last resort)');
-  console.log('Your prompt history will NOT be saved between sessions');
-  console.log('='.repeat(60) + '\n');
+  console.error('\n' + '='.repeat(60));
+  console.error('WARNING: Using in-memory database (last resort)');
+  console.error('Your prompt history will NOT be saved between sessions');
+  console.error('='.repeat(60) + '\n');
   return { path: ':memory:', location: 'memory' };
 }
 
