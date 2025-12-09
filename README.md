@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/cs97jjm3/prompt-refiner)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP](https://img.shields.io/badge/MCP-Claude%20Desktop-purple.svg)](https://claude.ai/)
 
 An MCP Desktop Extension that helps you refine prompts in different styles. Claude does the refinement work directly - no external API calls needed.
@@ -36,9 +36,10 @@ Created by James Murell at home: his day job is at The Access Group for Business
 
 ### Prerequisites
 
-1. **Node.js** (version 16 or higher)
+1. **Node.js** (version 18 or higher - required for fetch API)
    - Download from: https://nodejs.org/
    - Verify installation: `node --version`
+   - Note: Version 18+ is required for built-in fetch support
 
 2. **MCPB toolchain** (MCP Builder)
    ```bash

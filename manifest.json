@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.2",
   "name": "prompt-refiner",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "MCP Desktop Extension for refining prompts with style-specific variants",
   "long_description": "MCP Desktop Extension for refining prompts with style-specific variants",
   "author": {

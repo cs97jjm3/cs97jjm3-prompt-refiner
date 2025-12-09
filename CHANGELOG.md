@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2024-12-08
+
+### Fixed
+- **CRITICAL**: Prompt refinements now use actual Claude API calls for substantial, meaningful variations
+- Variants are now properly detailed and distinct from each other
+- Added length requirements (2-6 sentences depending on style)
+- Enhanced fallback system for when API calls fail
+- Node.js 18+ now required for built-in fetch API support
+
+### Changed
+- Minimum Node.js version increased to 18.0.0
+- Updated documentation to reflect Node 18+ requirement
+- Improved refinement quality with detailed API prompts
+
 ## [1.1.0] - 2024-12-08
 
 ### Added

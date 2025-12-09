@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+// Check Node version for fetch support
+const nodeVersion = process.versions.node.split('.')[0];
+if (parseInt(nodeVersion) < 18) {
+  console.error('Error: Node.js 18 or higher is required for fetch API support');
+  console.error(`Current version: ${process.version}`);
+  console.error('Please upgrade Node.js: https://nodejs.org/');
+  process.exit(1);
+}
+
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
@@ -298,10 +307,10 @@ class PromptRefinerMCP {
       };
     });
 
-    // Generate variants immediately
+    // Generate variants immediately using Claude
     const variants = [];
     for (const guide of guidance) {
-      const refinedText = this.generateVariantText(cleanPrompt, guide);
+      const refinedText = await this.generateVariantText(cleanPrompt, guide);
       const variantId = await db.saveVariant(promptId, guide.style, refinedText);
       variants.push({
         id: variantId,
@@ -324,18 +333,75 @@ class PromptRefinerMCP {
     };
   }
 
-  generateVariantText(originalPrompt, guide) {
-    // Simple refinement based on style
-    // In a real implementation, this would use an LLM
+  async generateVariantText(originalPrompt, guide) {
+    // Use Claude via the parent Claude instance to refine the prompt
+    // This leverages the fact that MCP tools run within Claude Desktop
+    const refinementPrompt = `You are a prompt engineering expert. Your task is to refine the following prompt according to specific style guidelines.
+
+ORIGINAL PROMPT:
+${originalPrompt}
+
+STYLE: ${guide.name}
+DESCRIPTION: ${guide.description}
+INSTRUCTION: ${guide.instruction}
+
+IMPORTANT GUIDELINES:
+- Create a SUBSTANTIALLY DIFFERENT and MORE DETAILED version
+- For "Concise": Still make it clear and specific, just more direct (2-3 sentences minimum)
+- For "Detailed": Add significant context, examples, constraints, and format requirements (4-6 sentences)
+- For "Creative": Use metaphors, analogies, and engaging language while keeping the core intent (3-5 sentences)
+- For "Analytical": Structure with clear steps, criteria, or framework (3-5 sentences with structure)
+- Make each variant feel distinctly different from the original
+- Each refined prompt should be substantive enough to provide real value
+
+Refined prompt (respond ONLY with the refined prompt, no explanations or preamble):`;
+
+    try {
+      // Call Claude's API - the API key is handled by Claude Desktop
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [
+            { role: 'user', content: refinementPrompt }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const refinedText = data.content
+        .map(item => (item.type === 'text' ? item.text : ''))
+        .filter(Boolean)
+        .join('\n')
+        .trim();
+
+      return refinedText || originalPrompt;
+    } catch (error) {
+      console.error(`Error refining prompt (${guide.style}):`, error.message);
+      // Fallback to basic refinement if API call fails
+      return this.generateFallbackVariant(originalPrompt, guide);
+    }
+  }
+
+  generateFallbackVariant(originalPrompt, guide) {
+    // Enhanced fallback when API is unavailable
     switch (guide.style) {
       case 'concise':
-        return `${originalPrompt} (simplified and direct)`;
+        return `${originalPrompt}\n\nBe direct and specific in your response.`;
       case 'detailed':
-        return `${originalPrompt} - with comprehensive context and specific details`;
+        return `${originalPrompt}\n\nProvide a comprehensive response with:\n- Detailed explanations\n- Relevant examples\n- Context and background\n- Specific implementation details`;
       case 'creative':
-        return `Imagine: ${originalPrompt} - expressed in an engaging, creative way`;
+        return `${originalPrompt}\n\nApproach this creatively by:\n- Thinking outside conventional boundaries\n- Using vivid examples and analogies\n- Exploring unexpected angles\n- Presenting ideas in engaging ways`;
       case 'analytical':
-        return `Analyze: ${originalPrompt} - break this down systematically with clear structure`;
+        return `${originalPrompt}\n\nAnalyze this systematically:\n1. Break down the key components\n2. Examine relationships and dependencies\n3. Identify patterns or frameworks\n4. Structure your response logically with clear reasoning`;
       default:
         return originalPrompt;
     }
