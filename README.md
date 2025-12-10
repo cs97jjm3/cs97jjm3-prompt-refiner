@@ -29,7 +29,7 @@ An MCP Desktop Extension that helps you refine prompts in different styles. Clau
 
 ## Author
 
-Created by James Murell at home: his day job is at The Access Group for Business Analyst
+Created by James Murell at home: 
 
 ---
 
