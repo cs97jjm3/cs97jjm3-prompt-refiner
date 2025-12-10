@@ -7,7 +7,8 @@
 
 An MCP Desktop Extension that helps you refine prompts in different styles. Claude does the refinement work directly - no external API calls needed.
 
-![Prompt Refiner Demo](https://via.placeholder.com/800x400/1a1a1a/ffffff?text=Prompt+Refiner+Demo)
+# Commercial License – cs97jjm3 Prompt Refiner
+
 
 > 📚 **Quick Links:** [Installation](#installation-instructions) • [Usage](#usage) • [Configuration](#configuration-details) • [Troubleshooting](#troubleshooting)
 
