@@ -560,3 +560,19 @@ Available February 4th, 2025
 - Four refinement styles
 - History tracking
 - React-based UI artifacts
+
+---
+
+## 📚 Learn to Build Tools Like This
+
+This tool was built using the methods described in **"The Business Analyst's Guide to AI-Assisted Tool Development"**.
+
+**Learn how to:**
+- Build utility tools that enhance AI workflows
+- Store data with SQLite
+- Create prompt engineering tools
+- Iterate and refine tools over time
+
+**Get the guide:** https://murrelljames.gumroad.com/l/pvfww (£5)
+
+**Repository:** https://github.com/cs97jjm3/ba-ai-tools-guide
