@@ -523,7 +523,7 @@ Claude: [provides comprehensive response using the refined prompt]
 - Check console output for diagnostic messages
 - Verify file paths and permissions
 - Ensure you've followed all installation steps
-- Contact: James at The Access Group
+- Contact: James 
 
 ---
 
