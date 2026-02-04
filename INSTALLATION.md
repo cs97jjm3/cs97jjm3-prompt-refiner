@@ -199,4 +199,4 @@ For issues or questions:
 1. Check console output for diagnostic messages
 2. Verify file paths and permissions
 3. Review this guide for configuration examples
-4. Contact: James at The Access Group
+4. Contact: James 
